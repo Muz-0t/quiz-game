@@ -14,7 +14,7 @@ public class MainPanelController : MonoBehaviour
     /// </summary>
     public void OnClickPlayButton()
     {
-        
+        GameManager.Instance.StartGame();
     }
 
     #region Main Menu 버튼 클릭 함수

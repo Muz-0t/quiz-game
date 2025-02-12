@@ -6,6 +6,6 @@ public class GamePanelController : MonoBehaviour
 {
     public void OnClickGameOverButton()
     {
-        
+        GameManager.Instance.QuitGame();
     }
 }
