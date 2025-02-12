@@ -1,15 +1,18 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class ObjectPool : MonoBehaviour
 {
     [SerializeField] private GameObject Prefab;
     [SerializeField] int poolSize;
+    [SerializeField] private RectTransform parent;
     
     private Queue<GameObject> _pool;
     private static ObjectPool _instance;
+    private List<GameObject> clone = new List<GameObject>();
 
     public static ObjectPool Instance
     {
@@ -26,15 +29,24 @@ public class ObjectPool : MonoBehaviour
             CreateNewObject();
         }
     }
-    
+
+    private void Update()
+    {
+        /*if (Input.GetKeyDown("space"))
+        {
+            clone[3].SetActive(false);
+        }*/
+    }
+
     /// <summary>
     /// 오브젝트 풀에 새로운 오브젝트 생성 함수
     /// </summary>
     private void CreateNewObject()
     {
-        GameObject newObject = Instantiate(Prefab);
+        GameObject newObject = Instantiate(Prefab, parent);
         newObject.SetActive(false);
         _pool.Enqueue(newObject);
+        clone.Add(newObject);
     }
     
     /// <summary>
