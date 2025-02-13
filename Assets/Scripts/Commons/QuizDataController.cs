@@ -20,12 +20,12 @@ public static class QuizDataController
         for (var i = 1; i < lines.Length; i++)
         {
             var values = Regex.Split(lines[i], COL_SEPARATOR);
-
+            QuizData quizData = new QuizData();
             for (var j = 0; j < values.Length; j++)
             {
                 var value = values[j];
                 value = value.TrimStart(TRIM_CHARS).TrimEnd(TRIM_CHARS).Replace("\\","");
-                QuizData quizData = new QuizData();
+                
                 switch (j)
                 {
                     case 0:
@@ -51,16 +51,6 @@ public static class QuizDataController
                         break;
                 }
             }
-            
-            /*QuizData quizData = new QuizData();
-            quizData.question = values[0];
-            quizData.description = values[1];
-            quizData.type = int.Parse(values[2]);
-            quizData.answer = int.Parse(values[3]);
-            
-            string[] options = { values[4], values[5], values[6] };
-            quizData.options = options;*/
-            
             quizDataList.Add(quizData);
         }
         return quizDataList;

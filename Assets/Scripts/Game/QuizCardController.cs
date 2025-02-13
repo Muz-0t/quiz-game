@@ -35,11 +35,19 @@ public class QuizCardController : MonoBehaviour
         // 퀴즈 데이터 표현
         questionText.text = quizData.question;
         // descriptionText.text = quizData.description;
-        for (int i = 0; i < optionButtons.Length; i++)
+        
+        var firstButtonText = optionButtons[0].GetComponentInChildren<TMP_Text>();
+        firstButtonText.text = quizData.firstOption;
+        var secondButtonText = optionButtons[1].GetComponentInChildren<TMP_Text>();
+        secondButtonText.text = quizData.secondOption;
+        var thirdButtonText = optionButtons[2].GetComponentInChildren<TMP_Text>();
+        thirdButtonText.text = quizData.thirdOption;
+        
+        /*for (int i = 0; i < optionButtons.Length; i++)
         {
             var buttonText = optionButtons[i].GetComponentInChildren<TMP_Text>();
             buttonText.text = quizData.options[i];
-        }
+        }*/
         this.onCompleted = onCompleted;
     }
 }
