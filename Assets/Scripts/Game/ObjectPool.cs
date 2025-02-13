@@ -23,11 +23,7 @@ public class ObjectPool : MonoBehaviour
     {
         _instance = this;
         _pool = new Queue<GameObject>();
-
-        for (int i = 0; i < poolSize; i++)
-        {
-            CreateNewObject();
-        }
+        
     }
 
     private void Update()
