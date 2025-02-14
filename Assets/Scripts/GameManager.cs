@@ -21,12 +21,17 @@ public class GameManager : Singleton<GameManager>
     {
         SceneManager.LoadScene("Main");
     }
-    
+
+    public void AllClearStage()
+    {
+        //TODO: 전체 스테이지 클리어 처리
+        QuitGame();
+    }
     protected override void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         
     }
-
+    
     private void OnApplicationQuit()
     {
         Debug.Log("OnApplicationQuit");

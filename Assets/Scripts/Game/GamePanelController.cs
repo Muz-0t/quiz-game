@@ -23,7 +23,7 @@ public class GamePanelController : MonoBehaviour
 
     private void InitQuizCards(int stageIndex)
     {
-        _quizDataList = QuizDataController.LoadQuizData(stageIndex+1);
+        _quizDataList = QuizDataController.LoadQuizData(stageIndex);
         _firstQuizCardObject = ObjectPool.Instance.GetObject();
         _firstQuizCardObject.GetComponent<QuizCardController>()
             .SetQuiz(_quizDataList[0],0, OnCompletedQuiz);
@@ -43,9 +43,17 @@ public class GamePanelController : MonoBehaviour
     {
         if (cardIndex >= Constans.MAX_QUIZ_COUNT -1)
         {
-            //TODO: 스테이지 클리어 연출<-애니메이션
-            InitQuizCards(++_lastStageIndex);
-            return;
+            if (_lastStageIndex >= Constans.MAX_STAGE_COUNT - 1)
+            {
+                //TODO: 올 클리어 처리
+                GameManager.Instance.QuitGame();
+            }
+            else
+            {
+                _lastStageIndex += 1;
+                InitQuizCards(_lastStageIndex);
+                return;
+            }
         }
         ChangeQuizCard();
     }
