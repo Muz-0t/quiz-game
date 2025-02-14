@@ -12,22 +12,25 @@ public class GamePanelController : MonoBehaviour
     private List<QuizData> _quizDataList;
     
     private int _lastGeneratedQuizIndex;
+    private int _lastStageIndex;
     
     private void Start()
     {
-        // 테스트
-        _quizDataList = QuizDataController.LoadQuizData(1);
+        _lastStageIndex = UserInfomations.lastStageIndex;
         
-        InitQuizCards();
+        InitQuizCards(_lastStageIndex);
     }
 
-    private void InitQuizCards()
+    private void InitQuizCards(int stageIndex)
     {
+        _quizDataList = QuizDataController.LoadQuizData(stageIndex+1);
         _firstQuizCardObject = ObjectPool.Instance.GetObject();
-        _firstQuizCardObject.GetComponent<QuizCardController>().SetQuiz(_quizDataList[0], OnCompletedQuiz);
+        _firstQuizCardObject.GetComponent<QuizCardController>()
+            .SetQuiz(_quizDataList[0],0, OnCompletedQuiz);
         
         _secondQuizCardObject = ObjectPool.Instance.GetObject();
-        _secondQuizCardObject.GetComponent<QuizCardController>().SetQuiz(_quizDataList[1], OnCompletedQuiz);
+        _secondQuizCardObject.GetComponent<QuizCardController>()
+            .SetQuiz(_quizDataList[1],1, OnCompletedQuiz);
         
         SetQuizCardPosition(_firstQuizCardObject, 0);
         SetQuizCardPosition(_secondQuizCardObject, 1);
@@ -38,6 +41,12 @@ public class GamePanelController : MonoBehaviour
 
     private void OnCompletedQuiz(int cardIndex)
     {
+        if (cardIndex >= Constans.MAX_QUIZ_COUNT -1)
+        {
+            //TODO: 스테이지 클리어 연출<-애니메이션
+            InitQuizCards(++_lastStageIndex);
+            return;
+        }
         ChangeQuizCard();
     }
 
@@ -69,7 +78,7 @@ public class GamePanelController : MonoBehaviour
         {
             _lastGeneratedQuizIndex += 1;
             _secondQuizCardObject.GetComponent<QuizCardController>()
-                .SetQuiz(_quizDataList[_lastGeneratedQuizIndex],OnCompletedQuiz);
+                .SetQuiz(_quizDataList[_lastGeneratedQuizIndex],_lastGeneratedQuizIndex,OnCompletedQuiz);
         }
         
         SetQuizCardPosition(_firstQuizCardObject, 0);

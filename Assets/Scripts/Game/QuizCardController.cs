@@ -38,6 +38,7 @@ public class QuizCardController : MonoBehaviour
     private event QuizCardDelegate onCompleted;
 
     private int _answer;
+    private int _quizCardIndex;
 
     private Vector2 _correctBackPanelPosition;
     private Vector2 _incorrectBackPanelPosition;
@@ -49,7 +50,7 @@ public class QuizCardController : MonoBehaviour
     }
 
 
-    public void SetQuiz(QuizData quizData, QuizCardDelegate onCompleted)
+    public void SetQuiz(QuizData quizData, int quizCardIndex,QuizCardDelegate onCompleted)
     {
         // 1. 퀴즈
         // 2. 설명
@@ -57,6 +58,8 @@ public class QuizCardController : MonoBehaviour
         // 4. 정답
         // 5. 보기 (1,2,3)
         
+        //퀴즈 카드 인덱스 할당
+        _quizCardIndex = quizCardIndex;
         //FrontPanel표시
         frontPanel.SetActive(true);
         correctBackPanel.SetActive(false);
@@ -160,7 +163,7 @@ public class QuizCardController : MonoBehaviour
     /// </summary>
     public void OnClickNextQuizButton()
     {
-        onCompleted?.Invoke(0);
+        onCompleted?.Invoke(_quizCardIndex);
     }
 
     #endregion
