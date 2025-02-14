@@ -18,15 +18,19 @@ public struct QuizData
 
 public class QuizCardController : MonoBehaviour
 {
+    //Front Panel
     [SerializeField] private TMP_Text questionText;
     [SerializeField] private TMP_Text descriptionText;
     [SerializeField] private Button[] optionButtons;
     [SerializeField] private GameObject frontPanel;
+    [SerializeField] private GameObject threeOptionButtons;
+    [SerializeField] private GameObject oxButtons;
+    
     [SerializeField] private GameObject correctBackPanel;
     [SerializeField] private GameObject incorrectBackPanel;
     
-    [SerializeField] private GameObject threeOptionButtons;
-    [SerializeField] private GameObject oxButtons;
+    //Incorrect Back Panel
+    [SerializeField] private TMP_Text heartCountText;
     
     private enum QuizCardPanelType{Front, CorrectBackPanel,IncorrectBackPanel}
     
@@ -85,6 +89,9 @@ public class QuizCardController : MonoBehaviour
         }
         
         this.onCompleted = onCompleted;
+        
+        //Incorrect Back Panel
+        heartCountText.text = GameManager.Instance.heartCount.ToString();
     }
 
     /// <summary>
@@ -153,7 +160,7 @@ public class QuizCardController : MonoBehaviour
     /// </summary>
     public void OnClickNextQuizButton()
     {
-        
+        onCompleted?.Invoke(0);
     }
 
     #endregion
@@ -164,6 +171,18 @@ public class QuizCardController : MonoBehaviour
     /// </summary>
     public void OnClickRetryQuizButton()
     {
+        //여분의 하트가 있다면
+        if (GameManager.Instance.heartCount > 0)
+        {
+            GameManager.Instance.heartCount--;
+            heartCountText.text = GameManager.Instance.heartCount.ToString();
+            SetQuizCardPanelActive(QuizCardPanelType.Front);
+        }
+        //하트가 모자라서 재도전 불가
+        else
+        {
+            //TODO: 하트 부족 알림
+        }
         
     }
     

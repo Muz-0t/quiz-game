@@ -98,10 +98,11 @@ MonoBehaviour:
   - {fileID: 8223289395542826796}
   - {fileID: 3730684625864426947}
   frontPanel: {fileID: 5634510562607774418}
-  correctBackPanel: {fileID: 4710499095900490245}
-  incorrectBackPanel: {fileID: 7839359946269178462}
   threeOptionButtons: {fileID: 1406217393223565634}
   oxButtons: {fileID: 358722007322728883}
+  correctBackPanel: {fileID: 4710499095900490245}
+  incorrectBackPanel: {fileID: 7839359946269178462}
+  heartCountText: {fileID: 4675166547095256030}
 --- !u!1 &228193782106184114
 GameObject:
   m_ObjectHideFlags: 0
@@ -1242,7 +1243,7 @@ GameObject:
   - component: {fileID: 3761725334146517046}
   - component: {fileID: 4675166547095256030}
   m_Layer: 5
-  m_Name: Heart Count
+  m_Name: Heart Count Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1304,8 +1305,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
