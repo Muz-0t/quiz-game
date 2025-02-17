@@ -16,7 +16,7 @@ public class HeartPanelController : MonoBehaviour
     
     [SerializeField] private AudioClip heartRemoveAudioClip;
     [SerializeField] private AudioClip heartAddAudioClip;
-    [SerializeField] private AudioClip heartEnptyAudioClip;
+    [SerializeField] private AudioClip heartEmptyAudioClip;
     
     //하트 추가 연출
     //하트 감소 연출
@@ -31,7 +31,7 @@ public class HeartPanelController : MonoBehaviour
     {
         heartRemoveImageObject.SetActive(false);
         
-        InitHeartCount(10);
+        InitHeartCount(GameManager.Instance.heartCount);
         
     }
 
@@ -80,6 +80,7 @@ public class HeartPanelController : MonoBehaviour
     public void AddHeart(int heartCount)
     {
         Sequence sequence = DOTween.Sequence();
+        heartCount = GameManager.Instance.heartCount;
 
         for (int i = 0; i < 3; i++)
         {
@@ -98,7 +99,7 @@ public class HeartPanelController : MonoBehaviour
     {
         //효과음 재생
         if(UserInfomations.IsPlaySFX)
-            _audioSource.PlayOneShot(heartEnptyAudioClip);
+            _audioSource.PlayOneShot(heartEmptyAudioClip);
         
         GetComponent<RectTransform>().DOPunchPosition(new Vector3(20f,0f,0f), 1f,7);
     }
@@ -118,7 +119,7 @@ public class HeartPanelController : MonoBehaviour
         heartRemoveImageObject.GetComponent<Image>().DOFade(0f, 1f);
         
         //하트 텍스트가 감소하는 연출
-        DOVirtual.DelayedCall(1f, () =>
+        DOVirtual.DelayedCall(0f, () =>
         {
             ChangeTextAnimation(false);
             

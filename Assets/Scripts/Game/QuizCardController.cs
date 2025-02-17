@@ -5,6 +5,7 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public struct QuizData
 {
@@ -26,13 +27,17 @@ public class QuizCardController : MonoBehaviour
     [SerializeField] private GameObject frontPanel;
     [SerializeField] private GameObject threeOptionButtons;
     [SerializeField] private GameObject oxButtons;
+    //[SerializeField] private Button addHeartButton;
     
+    //정답, 오답 패널 프리팹
     [SerializeField] private GameObject correctBackPanel;
     [SerializeField] private GameObject incorrectBackPanel;
     [SerializeField] private MuzTimer timer;
     
     //Incorrect Back Panel
     [SerializeField] private TMP_Text heartCountText;
+    
+    [SerializeField] HeartPanelController heartPanel;
     
     
     private enum QuizCardPanelType{Front, CorrectBackPanel,IncorrectBackPanel}
@@ -206,20 +211,30 @@ public class QuizCardController : MonoBehaviour
         //여분의 하트가 있다면
         if (GameManager.Instance.heartCount > 0)
         {
-            GameManager.Instance.heartCount--;
-            heartCountText.text = GameManager.Instance.heartCount.ToString();
-            SetQuizCardPanelActive(QuizCardPanelType.Front);
             
-            //타이머 초기화 및 다시시작
-            timer.InitTimer();
-            timer.StartTimer();
+                GameManager.Instance.heartCount--;
+                heartPanel.RemoveHeart();
+            DOVirtual.DelayedCall(1.5f, () =>
+            {
+                heartCountText.text = GameManager.Instance.heartCount.ToString();
+                SetQuizCardPanelActive(QuizCardPanelType.Front);
+            
+                //타이머 초기화 및 다시시작
+                timer.InitTimer();
+                timer.StartTimer();
+            });
         }
         //하트가 모자라서 재도전 불가
         else
         {
-            //TODO: 하트 부족 알림
+            heartPanel.EmptyHeart();
         }
         
+    }
+
+    public void OnClickAddHeartButton()
+    {
+        heartPanel.AddHeart(GameManager.Instance.heartCount);
     }
     
     #endregion
