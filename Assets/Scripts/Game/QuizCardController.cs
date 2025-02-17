@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -28,9 +29,11 @@ public class QuizCardController : MonoBehaviour
     
     [SerializeField] private GameObject correctBackPanel;
     [SerializeField] private GameObject incorrectBackPanel;
+    [SerializeField] private MuzTimer timer;
     
     //Incorrect Back Panel
     [SerializeField] private TMP_Text heartCountText;
+    
     
     private enum QuizCardPanelType{Front, CorrectBackPanel,IncorrectBackPanel}
     
@@ -49,6 +52,27 @@ public class QuizCardController : MonoBehaviour
         _incorrectBackPanelPosition = incorrectBackPanel.GetComponent<RectTransform>().anchoredPosition;
     }
 
+    private void Start()
+    {
+        timer.OnTimeout = () =>
+        {
+            //TODO: 오답 연출
+            SetQuizCardPanelActive(QuizCardPanelType.IncorrectBackPanel);
+        };
+    }
+
+    public void SetVisible(bool visible)
+    {
+        if (visible)
+        {
+            timer.InitTimer();
+            timer.StartTimer();
+        }
+        else
+        {
+            timer.InitTimer();
+        }
+    }
 
     public void SetQuiz(QuizData quizData, int quizCardIndex,QuizCardDelegate onCompleted)
     {
@@ -70,6 +94,7 @@ public class QuizCardController : MonoBehaviour
         _answer = quizData.answer;
         descriptionText.text = quizData.description;
         // descriptionText.text = quizData.description;
+        
 
         //3지선다 게임
         if (quizData.type == 0)
@@ -95,6 +120,7 @@ public class QuizCardController : MonoBehaviour
         
         //Incorrect Back Panel
         heartCountText.text = GameManager.Instance.heartCount.ToString();
+        
     }
 
     /// <summary>
@@ -103,6 +129,9 @@ public class QuizCardController : MonoBehaviour
     /// <param name="buttonIndex"></param>
     public void OnClickOptionButton(int buttonIndex)
     {
+        //Timer 일시 정지
+        timer.PauseTimer();
+        
         if (buttonIndex == _answer)
         {
             //TODO: 정답 연출
@@ -180,6 +209,10 @@ public class QuizCardController : MonoBehaviour
             GameManager.Instance.heartCount--;
             heartCountText.text = GameManager.Instance.heartCount.ToString();
             SetQuizCardPanelActive(QuizCardPanelType.Front);
+            
+            //타이머 초기화 및 다시시작
+            timer.InitTimer();
+            timer.StartTimer();
         }
         //하트가 모자라서 재도전 불가
         else
