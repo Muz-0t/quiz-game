@@ -6,15 +6,26 @@ using UnityEngine;
 using DG.Tweening;
 using UnityEngine.UI;
 
+[RequireComponent(typeof(AudioSource))]
 public class HeartPanelController : MonoBehaviour
 {
+    private AudioSource _audioSource;
     private int _heartCount;
     [SerializeField]private TMP_Text heartCountText;
     [SerializeField] private GameObject heartRemoveImageObject;
     
+    [SerializeField] private AudioClip heartRemoveAudioClip;
+    [SerializeField] private AudioClip heartAddAudioClip;
+    [SerializeField] private AudioClip heartEnptyAudioClip;
+    
     //하트 추가 연출
     //하트 감소 연출
     //하트 부족 연출
+
+    private void Awake()
+    {
+        _audioSource = GetComponent<AudioSource>();
+    }
 
     private void Start()
     {
@@ -75,7 +86,9 @@ public class HeartPanelController : MonoBehaviour
             sequence.AppendCallback(() =>
             {
                 ChangeTextAnimation(true);
-                //TODO: 효과음 재생
+                //효과음 추가
+                if(UserInfomations.IsPlaySFX)
+                    _audioSource.PlayOneShot(heartAddAudioClip);
             });
             sequence.AppendInterval(0.5f);
         }
@@ -83,11 +96,19 @@ public class HeartPanelController : MonoBehaviour
 
     public void EmptyHeart()
     {
+        //효과음 재생
+        if(UserInfomations.IsPlaySFX)
+            _audioSource.PlayOneShot(heartEnptyAudioClip);
+        
         GetComponent<RectTransform>().DOPunchPosition(new Vector3(20f,0f,0f), 1f,7);
     }
 
     public void RemoveHeart()
     {
+        //효과음 재생
+        if(UserInfomations.IsPlaySFX)
+            _audioSource.PlayOneShot(heartRemoveAudioClip);
+        
         //하트 사라지는 연출
         heartRemoveImageObject.SetActive(true);
         heartRemoveImageObject.transform.localScale = Vector3.zero;
@@ -97,22 +118,10 @@ public class HeartPanelController : MonoBehaviour
         heartRemoveImageObject.GetComponent<Image>().DOFade(0f, 1f);
         
         //하트 텍스트가 감소하는 연출
-        DOVirtual.DelayedCall(1.5f, () =>
+        DOVirtual.DelayedCall(1f, () =>
         {
-            heartCountText.rectTransform.DOAnchorPosY(-40f, 0.5f);
-            heartCountText.DOFade(0f, 0.5f).OnComplete(() =>
-            {
-                //하트 개수 감소
-                _heartCount--;
-                heartCountText.text = _heartCount.ToString();
-                
-                var textLength = heartCountText.text.Length;
-                GetComponent<RectTransform>().sizeDelta = new Vector2(100 + textLength * 30f, 100f);
-
-                heartCountText.rectTransform.DOAnchorPosY(40f, 0f);
-                heartCountText.rectTransform.DOAnchorPosY(0, 0.5f);
-                heartCountText.DOFade(1f, 0.5f);
-            });
+            ChangeTextAnimation(false);
+            
         });
         
         
