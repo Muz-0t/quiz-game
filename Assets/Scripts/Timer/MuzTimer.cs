@@ -53,6 +53,8 @@ public class MuzTimer : MonoBehaviour
     public void StartTimer()
     {
         _isPaused = false;
+        headCapImage.gameObject.SetActive(true);
+        tailCapImage.gameObject.SetActive(true);
     }
 
     public void PauseTimer()
