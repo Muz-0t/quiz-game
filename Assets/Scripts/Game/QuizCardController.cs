@@ -24,11 +24,6 @@ public interface IQuizCardPositionState
     void Trasition(bool withAnimation, Action onComplete = null);
 }
 
-public interface IQuizCardAnimationState
-{
-    void Animation(Action onComplete = null);
-}
-
 // 퀴즈 카드의 위치 상태 전이를 관리할 목적
 public class QuizCardPositionStateContext
 {
@@ -48,7 +43,7 @@ public class QuizCardPositionState
     protected QuizCardController _quizCardController;
     protected RectTransform _rectTransform;
     protected CanvasGroup _canvasGroup;
-    
+
     public QuizCardPositionState(QuizCardController quizCardController)
     {
         _quizCardController = quizCardController;
@@ -102,16 +97,15 @@ public class QuizCardPositionStateRemove: QuizCardPositionState, IQuizCardPositi
     }
 }
 
-//퀴즈 카드가 뒤집어지는 상태 클래스
+// 퀴즈 카드가 뒤집어지는 상태 클래스
 public class QuizCardPositionStateFlip : QuizCardPositionState, IQuizCardPositionState
 {
     public QuizCardPositionStateFlip(QuizCardController quizCardController) : base(quizCardController) { }
-
     public void Trasition(bool withAnimation, Action onComplete = null)
     {
         var animationDuration = (withAnimation) ? 0.3f : 0f;
-        
-        _rectTransform.DORotate(new Vector3(0,90,0), animationDuration/2)
+
+        _rectTransform.DORotate(new Vector3(0, 90, 0), animationDuration / 2)
             .OnComplete(() =>
             {
                 _rectTransform.DORotate(new Vector3(0, 0, 0), animationDuration / 2)
@@ -119,6 +113,24 @@ public class QuizCardPositionStateFlip : QuizCardPositionState, IQuizCardPositio
             });
     }
 }
+
+public class QuizCardPositionStateFlipNormal : QuizCardPositionState, IQuizCardPositionState
+{
+    public QuizCardPositionStateFlipNormal(QuizCardController quizCardController) : base(quizCardController) { }
+    public void Trasition(bool withAnimation, Action onComplete = null)
+    {
+        var animationDuration = (withAnimation) ? 0.3f : 0f;
+
+        _rectTransform.DORotate(new Vector3(0, 90, 0), animationDuration / 2)
+            .OnComplete(() =>
+            {
+                _rectTransform.DORotate(new Vector3(0, 0, 0), animationDuration / 2)
+                    .OnComplete(() => onComplete?.Invoke());
+            });
+    }
+}
+
+
 
 public class QuizCardController : MonoBehaviour
 {
@@ -153,7 +165,8 @@ public class QuizCardController : MonoBehaviour
     private IQuizCardPositionState _positionStateFirst;
     private IQuizCardPositionState _positionStateSecond;
     private IQuizCardPositionState _positionStateRemove;
-    private QuizCardPositionStateFlip _positionStateFlip;
+    private IQuizCardPositionState _positionStateFlip;
+    private IQuizCardPositionState _positionStateFlipNormal;        // 추가
     private QuizCardPositionStateContext _positionStateContext;
 
     private void Awake()
@@ -166,9 +179,10 @@ public class QuizCardController : MonoBehaviour
         _positionStateContext = new QuizCardPositionStateContext();
         _positionStateFirst = new QuizCardPositionStateFirst(this);
         _positionStateSecond = new QuizCardPositionStateSecond(this);
-        _positionStateFlip = new QuizCardPositionStateFlip(this);
         _positionStateRemove = new QuizCardPositionStateRemove(this);
-        _positionStateContext.SetState(_positionStateRemove, false); // 카드 위치 초기화
+        _positionStateFlip = new QuizCardPositionStateFlip(this);
+        _positionStateFlipNormal = new QuizCardPositionStateFlipNormal(this);       // 추가
+        _positionStateContext.SetState(_positionStateRemove, false);
     }
 
     private void Start()
@@ -226,7 +240,7 @@ public class QuizCardController : MonoBehaviour
         _quizCardIndex = quizData.index;
         
         // Front Panel 표시
-        SetQuizCardPanelActive(QuizCardPanelType.Front);
+        SetQuizCardPanelActive(QuizCardPanelType.Front, false);
         
         // 퀴즈 데이터 표현
         questionText.text = quizData.question;
@@ -284,23 +298,26 @@ public class QuizCardController : MonoBehaviour
         }
     }
     
-    private void SetQuizCardPanelActive(QuizCardPanelType quizCardPanelType)
+    private void SetQuizCardPanelActive(QuizCardPanelType quizCardPanelType, bool withAnimation = true)
     {
         switch (quizCardPanelType)
         {
             case QuizCardPanelType.Front:
-                frontPanel.SetActive(true);
                 correctBackPanel.SetActive(false);
                 incorrectBackPanel.SetActive(false);
-                
-                correctBackPanel.GetComponent<RectTransform>().anchoredPosition = _correctBackPanelPosition;
-                incorrectBackPanel.GetComponent<RectTransform>().anchoredPosition = _incorrectBackPanelPosition;
+
+                _positionStateContext.SetState(_positionStateFlipNormal, withAnimation, () =>
+                {
+                    frontPanel.SetActive(true);
+                    correctBackPanel.GetComponent<RectTransform>().anchoredPosition = _correctBackPanelPosition;
+                    incorrectBackPanel.GetComponent<RectTransform>().anchoredPosition = _incorrectBackPanelPosition;
+                });
                 break;
             case QuizCardPanelType.CorrectBackPanel:
                 frontPanel.SetActive(false);
                 incorrectBackPanel.SetActive(false);
                 
-                _positionStateContext.SetState(_positionStateFlip,true,() =>
+                _positionStateContext.SetState(_positionStateFlip, withAnimation, () =>
                 {
                     correctBackPanel.SetActive(true);
                     correctBackPanel.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
@@ -310,8 +327,8 @@ public class QuizCardController : MonoBehaviour
             case QuizCardPanelType.InCorrectBackPanel:
                 frontPanel.SetActive(false);
                 correctBackPanel.SetActive(false);
-                
-                _positionStateContext.SetState(_positionStateFlip,true,() =>
+
+                _positionStateContext.SetState(_positionStateFlip, withAnimation, () =>
                 {
                     incorrectBackPanel.SetActive(true);
                     correctBackPanel.GetComponent<RectTransform>().anchoredPosition = _correctBackPanelPosition;
@@ -348,7 +365,6 @@ public class QuizCardController : MonoBehaviour
         {
             GameManager.Instance.heartCount--;
             heartCountText.text = GameManager.Instance.heartCount.ToString();
-            
             SetQuizCardPanelActive(QuizCardPanelType.Front);
             
             // 타이머 초기화 및 시작
