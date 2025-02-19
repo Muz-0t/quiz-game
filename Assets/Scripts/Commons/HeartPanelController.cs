@@ -1,26 +1,28 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using DG.Tweening;
+using TMPro;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(AudioSource))]
 public class HeartPanelController : MonoBehaviour
 {
+    [SerializeField] private GameObject _heartRemoveImageObject;
+    [SerializeField] private TMP_Text _heartCountText;
+    
+    [SerializeField] private AudioClip _heartRemoveAudioClip;
+    [SerializeField] private AudioClip _heartAddAudioClip;
+    [SerializeField] private AudioClip _heartEmptyAudioClip;
+    
     private AudioSource _audioSource;
+    
     private int _heartCount;
-    [SerializeField]private TMP_Text heartCountText;
-    [SerializeField] private GameObject heartRemoveImageObject;
     
-    [SerializeField] private AudioClip heartRemoveAudioClip;
-    [SerializeField] private AudioClip heartAddAudioClip;
-    [SerializeField] private AudioClip heartEmptyAudioClip;
-    
-    //하트 추가 연출
-    //하트 감소 연출
-    //하트 부족 연출
+    // 1. 하트 추가 연출
+    // 2. 하트 감소 연출
+    // 3. 하트 부족 연출
 
     private void Awake()
     {
@@ -29,20 +31,18 @@ public class HeartPanelController : MonoBehaviour
 
     private void Start()
     {
-        heartRemoveImageObject.SetActive(false);
-        
-        InitHeartCount(GameManager.Instance.heartCount);
-        
+        _heartRemoveImageObject.SetActive(false);
+        InitHeartCount(10);
     }
 
     /// <summary>
-    /// 하트 패널에 하트 수 초기화
+    /// Heart Panel에 하트 수 초기화
     /// </summary>
     /// <param name="heartCount">하트 수</param>
     public void InitHeartCount(int heartCount)
     {
         _heartCount = heartCount;
-        heartCountText.text = _heartCount.ToString();
+        _heartCountText.text = _heartCount.ToString();
     }
 
     private void ChangeTextAnimation(bool isAdd)
@@ -50,29 +50,30 @@ public class HeartPanelController : MonoBehaviour
         float duration = 0.2f;
         float yPos = 40f;
         
-        heartCountText.rectTransform.DOAnchorPosY(-yPos, duration);
-        heartCountText.DOFade(0f, duration).OnComplete(() =>
+        _heartCountText.rectTransform.DOAnchorPosY(-yPos, duration);
+        _heartCountText.DOFade(0, duration).OnComplete(() =>
         {
             if (isAdd)
             {
-                var currentHeartText = heartCountText.text;
-                heartCountText.text = (int.Parse(currentHeartText) + 1).ToString();
+                var currentHeartCount = _heartCountText.text;
+                _heartCountText.text = (int.Parse(currentHeartCount) + 1).ToString();
             }
             else
             {
-                var currentHeartText = heartCountText.text;
-                heartCountText.text = (int.Parse(currentHeartText) - 1).ToString();
+                var currentHeartCount = _heartCountText.text;
+                _heartCountText.text = (int.Parse(currentHeartCount) - 1).ToString();
             }
             
-            //Heart Panel의 Width를 글자 수에 따라 변경하는 코드
-            var textLength = heartCountText.text.Length;
+            // Heart Panel의 Width를 글자 수에 따라 변경
+            var textLength = _heartCountText.text.Length;
             GetComponent<RectTransform>().sizeDelta = new Vector2(100 + textLength * 30f, 100f);
             
-            heartCountText.rectTransform.DOAnchorPosY(yPos, 0);
-            heartCountText.rectTransform.DOAnchorPosY(0, duration);
-            heartCountText.DOFade(1, duration).OnComplete(() =>
+            // 새로운 하트 수 추가 애니메이션
+            _heartCountText.rectTransform.DOAnchorPosY(yPos, 0);
+            _heartCountText.rectTransform.DOAnchorPosY(0, duration);
+            _heartCountText.DOFade(1, duration).OnComplete(() =>
             {
-                
+
             });
         });
     }
@@ -80,16 +81,16 @@ public class HeartPanelController : MonoBehaviour
     public void AddHeart(int heartCount)
     {
         Sequence sequence = DOTween.Sequence();
-        heartCount = GameManager.Instance.heartCount;
 
         for (int i = 0; i < 3; i++)
         {
             sequence.AppendCallback(() =>
             {
                 ChangeTextAnimation(true);
-                //효과음 추가
-                if(UserInfomations.IsPlaySFX)
-                    _audioSource.PlayOneShot(heartAddAudioClip);
+                
+                // 효과음 재생
+                if (UserInformations.IsPlaySFX)
+                    _audioSource.PlayOneShot(_heartAddAudioClip);
             });
             sequence.AppendInterval(0.5f);
         }
@@ -97,35 +98,31 @@ public class HeartPanelController : MonoBehaviour
 
     public void EmptyHeart()
     {
-        //효과음 재생
-        if(UserInfomations.IsPlaySFX)
-            _audioSource.PlayOneShot(heartEmptyAudioClip);
+        // 효과음 재생
+        if (UserInformations.IsPlaySFX)
+            _audioSource.PlayOneShot(_heartEmptyAudioClip);
         
-        GetComponent<RectTransform>().DOPunchPosition(new Vector3(20f,0f,0f), 1f,7);
+        GetComponent<RectTransform>().DOPunchPosition(new Vector3(20f, 0, 0), 1f, 7);
     }
 
     public void RemoveHeart()
     {
-        //효과음 재생
-        if(UserInfomations.IsPlaySFX)
-            _audioSource.PlayOneShot(heartRemoveAudioClip);
+        // 효과음 재생
+        if (UserInformations.IsPlaySFX)
+            _audioSource.PlayOneShot(_heartRemoveAudioClip);
         
-        //하트 사라지는 연출
-        heartRemoveImageObject.SetActive(true);
-        heartRemoveImageObject.transform.localScale = Vector3.zero;
-        heartRemoveImageObject.GetComponent<Image>().color = Color.white;
+        // 하트 사라지는 연출
+        _heartRemoveImageObject.SetActive(true);
+        _heartRemoveImageObject.transform.localScale = Vector3.zero;
+        _heartRemoveImageObject.GetComponent<Image>().color = Color.white;
         
-        heartRemoveImageObject.transform.DOScale(3f, 1f);
-        heartRemoveImageObject.GetComponent<Image>().DOFade(0f, 1f);
+        _heartRemoveImageObject.transform.DOScale(3f, 1f);
+        _heartRemoveImageObject.GetComponent<Image>().DOFade(0f, 1f);
         
-        //하트 텍스트가 감소하는 연출
-        DOVirtual.DelayedCall(0f, () =>
+        // 하트 수 텍스트 떨어지는 연출
+        DOVirtual.DelayedCall(1f, () =>
         {
             ChangeTextAnimation(false);
-            
         });
-        
-        
-        
     }
 }

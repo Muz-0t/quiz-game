@@ -1,14 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
-using DG.Tweening;
 
 public struct QuizData
 {
+    public int index;
     public string question;
     public string description;
     public int type;
@@ -18,41 +18,117 @@ public struct QuizData
     public string thirdOption;
 }
 
+// 퀴즈 카드의 위치 상태를 정의할 클래스가 반드시 구현할(약속) 메서드의 목록
+public interface IQuizCardPositionState
+{
+    void Trasition(bool withAnimation, Action onComplete = null);
+}
+
+// 퀴즈 카드의 위치 상태 전이를 관리할 목적
+public class QuizCardPositionStateContext
+{
+    private IQuizCardPositionState _currentState;
+
+    public void SetState(IQuizCardPositionState state, bool withAnimation, Action onComplete = null)
+    {
+        if (_currentState == null) return;
+        
+        _currentState = state;
+        _currentState.Trasition(withAnimation,onComplete);
+    }
+}
+
+public class QuizCardPositionState
+{
+    protected QuizCardController _quizCardController;
+    protected RectTransform _rectTransform;
+    protected CanvasGroup _canvasGroup;
+
+    public QuizCardPositionState(QuizCardController quizCardController)
+    {
+        _quizCardController = quizCardController;
+        _rectTransform = _quizCardController.gameObject.GetComponent<RectTransform>();
+        _canvasGroup = _quizCardController.gameObject.GetComponent<CanvasGroup>();
+    }
+}
+
+// 퀴즈 카드가 첫 번째 위치에 나타날 상태를 처리할 상태 클래스
+public class QuizCardPositionStateFirst: QuizCardPositionState, IQuizCardPositionState
+{
+    public QuizCardPositionStateFirst(QuizCardController quizCardController) : base(quizCardController) { }
+
+    public void Trasition(bool withAnimation, Action onComplete = null)
+    {
+        var animationDuration = (withAnimation) ? 0.2f : 0f;
+        
+        _rectTransform.DOAnchorPos(Vector2.zero, animationDuration);
+        _rectTransform.DOScale(1f, animationDuration);
+        _canvasGroup.DOFade(1f, animationDuration).OnComplete(() => onComplete?.Invoke());
+
+        _rectTransform.SetAsLastSibling();
+    }
+}
+// 퀴즈 카드가 두 번째 위치에 나타날 상태를 처리할 상태 클래스
+public class QuizCardPositionStateSecond: QuizCardPositionState, IQuizCardPositionState
+{
+    public QuizCardPositionStateSecond(QuizCardController quizCardController) : base(quizCardController) { }
+
+    public void Trasition(bool withAnimation, Action onComplete = null)
+    {
+        var animationDuration = (withAnimation) ? 0.2f : 0f;
+        
+        _rectTransform.DOAnchorPos(new Vector2(0f,160f), animationDuration);
+        _rectTransform.DOScale(0.9f, animationDuration);
+        _canvasGroup.DOFade(0.7f, animationDuration).OnComplete(() => onComplete?.Invoke());
+
+        _rectTransform.SetAsLastSibling();
+    }
+}
+// 퀴즈 카드가 사라질 상태를 처리할 상태 클래스
+public class QuizCardPositionStateRemove: QuizCardPositionState, IQuizCardPositionState
+{
+    public QuizCardPositionStateRemove(QuizCardController quizCardController) : base(quizCardController) { }
+
+    public void Trasition(bool withAnimation, Action onComplete = null)
+    {
+        var animationDuration = (withAnimation) ? 0.2f : 0f;
+        _rectTransform.DOAnchorPos(new Vector2(0f, -280f), animationDuration);
+        _canvasGroup.DOFade(0f, animationDuration).OnComplete(() => onComplete?.Invoke());
+    }
+}
+
 public class QuizCardController : MonoBehaviour
 {
-    //Front Panel
+    [SerializeField] private GameObject frontPanel;
+    [SerializeField] private GameObject correctBackPanel;
+    [SerializeField] private GameObject incorrectBackPanel;
+    
+    // Front Panel
     [SerializeField] private TMP_Text questionText;
     [SerializeField] private TMP_Text descriptionText;
     [SerializeField] private Button[] optionButtons;
-    [SerializeField] private GameObject frontPanel;
     [SerializeField] private GameObject threeOptionButtons;
     [SerializeField] private GameObject oxButtons;
-    //[SerializeField] private Button addHeartButton;
     
-    //정답, 오답 패널 프리팹
-    [SerializeField] private GameObject correctBackPanel;
-    [SerializeField] private GameObject incorrectBackPanel;
-    [SerializeField] private MuzTimer timer;
-    
-    //Incorrect Back Panel
+    // Incorrect Back Panel
     [SerializeField] private TMP_Text heartCountText;
     
-    [SerializeField] HeartPanelController heartPanel;
+    // Timer
+    [SerializeField] private MuzTimer timer;
     
-    
-    private enum QuizCardPanelType{Front, CorrectBackPanel,IncorrectBackPanel}
-    
+    private enum QuizCardPanelType { Front, CorrectBackPanel, InCorrectBackPanel }
+
     public delegate void QuizCardDelegate(int cardIndex);
     private event QuizCardDelegate onCompleted;
-
     private int _answer;
     private int _quizCardIndex;
-
+    
     private Vector2 _correctBackPanelPosition;
     private Vector2 _incorrectBackPanelPosition;
 
     private void Awake()
     {
+        // 숨겨진 패널의 좌표 저장
         _correctBackPanelPosition = correctBackPanel.GetComponent<RectTransform>().anchoredPosition;
         _incorrectBackPanelPosition = incorrectBackPanel.GetComponent<RectTransform>().anchoredPosition;
     }
@@ -61,14 +137,14 @@ public class QuizCardController : MonoBehaviour
     {
         timer.OnTimeout = () =>
         {
-            //TODO: 오답 연출
-            SetQuizCardPanelActive(QuizCardPanelType.IncorrectBackPanel);
+            // TODO: 오답 연출
+            SetQuizCardPanelActive(QuizCardPanelType.InCorrectBackPanel);
         };
     }
 
-    public void SetVisible(bool visible)
+    public void SetVisible(bool isVisible)
     {
-        if (visible)
+        if (isVisible)
         {
             timer.InitTimer();
             timer.StartTimer();
@@ -79,7 +155,7 @@ public class QuizCardController : MonoBehaviour
         }
     }
 
-    public void SetQuiz(QuizData quizData, int quizCardIndex,QuizCardDelegate onCompleted)
+    public void SetQuiz(QuizData quizData, QuizCardDelegate onCompleted)
     {
         // 1. 퀴즈
         // 2. 설명
@@ -87,23 +163,20 @@ public class QuizCardController : MonoBehaviour
         // 4. 정답
         // 5. 보기 (1,2,3)
         
-        //퀴즈 카드 인덱스 할당
-        _quizCardIndex = quizCardIndex;
-        //FrontPanel표시
-        frontPanel.SetActive(true);
-        correctBackPanel.SetActive(false);
-        incorrectBackPanel.SetActive(false);
+        // 퀴즈 카드 인덱스 할당
+        _quizCardIndex = quizData.index;
+        
+        // Front Panel 표시
+        SetQuizCardPanelActive(QuizCardPanelType.Front);
         
         // 퀴즈 데이터 표현
         questionText.text = quizData.question;
         _answer = quizData.answer;
         descriptionText.text = quizData.description;
-        // descriptionText.text = quizData.description;
-        
 
-        //3지선다 게임
         if (quizData.type == 0)
         {
+            // 3지선다 퀴즈
             threeOptionButtons.SetActive(true);
             oxButtons.SetActive(false);
             
@@ -114,18 +187,17 @@ public class QuizCardController : MonoBehaviour
             var thirdButtonText = optionButtons[2].GetComponentInChildren<TMP_Text>();
             thirdButtonText.text = quizData.thirdOption;
         }
-        //OX게임
         else if (quizData.type == 1)
         {
+            // OX 퀴즈
             threeOptionButtons.SetActive(false);
             oxButtons.SetActive(true);
         }
         
         this.onCompleted = onCompleted;
         
-        //Incorrect Back Panel
+        // Incorrect Back Panel
         heartCountText.text = GameManager.Instance.heartCount.ToString();
-        
     }
 
     /// <summary>
@@ -134,25 +206,24 @@ public class QuizCardController : MonoBehaviour
     /// <param name="buttonIndex"></param>
     public void OnClickOptionButton(int buttonIndex)
     {
-        //Timer 일시 정지
+        // Timer 일시 정시
         timer.PauseTimer();
         
         if (buttonIndex == _answer)
         {
-            //TODO: 정답 연출
-            Debug.Log("정답");
+            Debug.Log("정답!");
+            // TODO: 정답 연출
             
             SetQuizCardPanelActive(QuizCardPanelType.CorrectBackPanel);
         }
         else
         {
-            //TODO: 오답 연출
-            Debug.Log("오답");
+            Debug.Log("오답~");
+            // TODO: 오답 연출
             
-            SetQuizCardPanelActive(QuizCardPanelType.IncorrectBackPanel);
+            SetQuizCardPanelActive(QuizCardPanelType.InCorrectBackPanel);
         }
     }
-
     
     private void SetQuizCardPanelActive(QuizCardPanelType quizCardPanelType)
     {
@@ -174,8 +245,7 @@ public class QuizCardController : MonoBehaviour
                 correctBackPanel.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
                 incorrectBackPanel.GetComponent<RectTransform>().anchoredPosition = _incorrectBackPanelPosition;
                 break;
-            
-            case QuizCardPanelType.IncorrectBackPanel:
+            case QuizCardPanelType.InCorrectBackPanel:
                 frontPanel.SetActive(false);
                 correctBackPanel.SetActive(false);
                 incorrectBackPanel.SetActive(true);
@@ -183,7 +253,7 @@ public class QuizCardController : MonoBehaviour
                 correctBackPanel.GetComponent<RectTransform>().anchoredPosition = _correctBackPanelPosition;
                 incorrectBackPanel.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
                 break;
-        }
+        }    
     }
     
     public void OnClickExitButton()
@@ -193,48 +263,38 @@ public class QuizCardController : MonoBehaviour
 
     #region Correct Back Panel
     /// <summary>
-    /// 다음 버튼 이벤트  
+    /// 다음 버튼 이벤트
     /// </summary>
     public void OnClickNextQuizButton()
     {
         onCompleted?.Invoke(_quizCardIndex);
     }
-
-    #endregion
     
+    #endregion
+
     #region Incorrect Back Panel
+
     /// <summary>
     /// 다시도전 버튼 이벤트
     /// </summary>
     public void OnClickRetryQuizButton()
     {
-        //여분의 하트가 있다면
         if (GameManager.Instance.heartCount > 0)
         {
+            GameManager.Instance.heartCount--;
+            heartCountText.text = GameManager.Instance.heartCount.ToString();
             
-                GameManager.Instance.heartCount--;
-                heartPanel.RemoveHeart();
-            DOVirtual.DelayedCall(1.5f, () =>
-            {
-                heartCountText.text = GameManager.Instance.heartCount.ToString();
-                SetQuizCardPanelActive(QuizCardPanelType.Front);
+            SetQuizCardPanelActive(QuizCardPanelType.Front);
             
-                //타이머 초기화 및 다시시작
-                timer.InitTimer();
-                timer.StartTimer();
-            });
+            // 타이머 초기화 및 시작
+            timer.InitTimer();
+            timer.StartTimer();
         }
-        //하트가 모자라서 재도전 불가
         else
         {
-            heartPanel.EmptyHeart();
+            // 하트가 부족해서 다시도전 불가
+            // TODO: 하트 부족 알림
         }
-        
-    }
-
-    public void OnClickAddHeartButton()
-    {
-        heartPanel.AddHeart(GameManager.Instance.heartCount);
     }
     
     #endregion

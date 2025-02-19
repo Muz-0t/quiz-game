@@ -21,10 +21,12 @@ public static class QuizDataController
         {
             var values = Regex.Split(lines[i], COL_SEPARATOR);
             QuizData quizData = new QuizData();
+            quizData.index = i - 1;
+            
             for (var j = 0; j < values.Length; j++)
             {
                 var value = values[j];
-                value = value.TrimStart(TRIM_CHARS).TrimEnd(TRIM_CHARS).Replace("\\","");
+                value = value.TrimStart(TRIM_CHARS).TrimEnd(TRIM_CHARS).Replace("\\", "");
                 
                 switch (j)
                 {
