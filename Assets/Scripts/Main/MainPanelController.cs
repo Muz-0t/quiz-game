@@ -7,6 +7,9 @@ public class MainPanelController : MonoBehaviour
 {
     [SerializeField] private TMP_Text _heartText;           // 남은 하트 수
     [SerializeField] private TMP_Text _stageText;           // 현재 스테이지
+    [SerializeField] private Transform canvasTransform;
+    
+    [SerializeField] private GameObject settingPopupPanelPrefab;
 
     /// <summary>
     /// Play Button 눌렀을 때 호출되는 메서드
@@ -43,6 +46,7 @@ public class MainPanelController : MonoBehaviour
     /// </summary>
     public void OnClickSettingsButton()
     {
+        Instantiate(settingPopupPanelPrefab, canvasTransform);
     }
     #endregion
 }
