@@ -856,7 +856,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1379457308}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1985954143}
+        m_TargetAssemblyTypeName: MainPanelController, Assembly-CSharp
+        m_MethodName: OnClickStageButton
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1379457308
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1609,11 +1621,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25bc0dae4f505f94388711b26ee8bcbd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _heartText: {fileID: 367361934}
-  _stageText: {fileID: 1838532135}
+  heartText: {fileID: 0}
+  stageText: {fileID: 0}
   canvasTransform: {fileID: 1954096496}
   settingPopupPanelPrefab: {fileID: 4235071686778662819, guid: af9cd1e823d53e846828758803ce5260, type: 3}
   shopPopupPanelPrefab: {fileID: 2407225342760177493, guid: 7a718e3b518507544b3b2e27418f0ce4, type: 3}
+  stagePopupPanelPrefab: {fileID: 8365903329414681583, guid: 843730763b3de424c955a68281adfb64, type: 3}
 --- !u!1 &2006965704
 GameObject:
   m_ObjectHideFlags: 0
